@@ -20,3 +20,5 @@ git clone https://github.com/luismalddonado/IntesishomewithDomoticz
 
 [Domoticz forum](https://www.domoticz.com/forum/viewtopic.php?f=34&t=28194)
 
+# This fork
+I added "Vane Up/Down" and "Vane Left/Right" capability.
