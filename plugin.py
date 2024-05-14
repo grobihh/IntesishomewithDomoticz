@@ -76,20 +76,29 @@ class BasePlugin:
 						"LevelNames" : "|Auto|Heat|Dry|Cool|Fan",
 						"LevelOffHidden" : "true",
 						"SelectorStyle" : "0"}
-			
+
 			Domoticz.Device(Name="Mode", Unit=3, TypeName="Selector Switch", Image=16, Options=Options, Used=1).Create()
-			
-			Options = {"LevelActions" : "||||",
-						"LevelNames" : "|Auto|L1|L2|L3",
-						"LevelOffHidden" : "true",
-						"SelectorStyle" : "0"}
 
 			Domoticz.Device(Name="Fan Speed", Unit=4, TypeName="Selector Switch", Image=7, Options=Options, Used=1).Create()
 
 			Domoticz.Device(Name="Set Temp", Unit=5, Type=242, Subtype=1, Image=16, Used=1).Create()
 
 			Domoticz.Device(Name="Error LED", Unit=6,  Image=13, TypeName="Switch", Used=1).Create()
+
 			Domoticz.Device(Name="Error Text", Unit=7, TypeName="Text", Used=1).Create()
+
+			Options = {"LevelActions" : "|||",
+						"LevelNames" : "|Auto|Swing|Pulse",
+						"LevelOffHidden" : "true",
+						"SelectorStyle" : "0"}
+			Domoticz.Device(Name="VaneUD", Unit=8, TypeName="Selector Switch", Image=7, Options=Options, Used=1).Create()
+
+			Options = {"LevelActions" : "||",
+						"LevelNames" : "|Auto|Swing",
+						"LevelOffHidden" : "true",
+						"SelectorStyle" : "0"}
+
+			Domoticz.Device(Name="VaneLR", Unit=9, TypeName="Selector Switch", Image=7, Options=Options, Used=1).Create()
 
 			Domoticz.Log("Device created.")
 
@@ -201,6 +210,8 @@ class BasePlugin:
 				elif (unitmode == "FAN"):
 					Domoticz.Status("Mode to: " + unitmode)
 					Devices[3].Update(nValue=1, sValue="50") # Fan
+				else:
+					Domoticz.Status("ERROR Mode: " + unitmode)
 				Devices[3].Refresh()
 			elif (msgDataList[2] == 'FANSP'):
 				fspeed = msgDataList[3]
@@ -216,13 +227,34 @@ class BasePlugin:
 				elif (fspeed == "3"):
 					Domoticz.Status("Fan Speed to: " + fspeed)
 					Devices[4].Update(nValue=1, sValue="40") # Fan Level 3
+				else:
+					Domoticz.Status("ERROR Fan Speed: " + fspeed)
 				Devices[4].Refresh()
 			elif (msgDataList[2] == 'VANEUD'):
 				vaneud = msgDataList[3]
-				Domoticz.Status("Vane Up/Down: " + vaneud)
+				if (vaneud == "AUTO"):
+					Domoticz.Status("Vane Up/Down to: " + vaneud)
+					Devices[8].Update(nValue=1, sValue="10") # Fan Auto
+				elif (vaneud == "SWING"):
+					Domoticz.Status("Vane Up/Down to: " + vaneud)
+					Devices[8].Update(nValue=1, sValue="20") # Fan Level 1
+				elif (vaneud == "PULSE"):
+					Domoticz.Status("Vane Up/Down to: " + vaneud)
+					Devices[8].Update(nValue=1, sValue="30") # Fan Level 2
+				else:
+					Domoticz.Status("ERROR Vane Up/Down: " + vaneud)
+				Devices[8].Refresh()
 			elif (msgDataList[2] == 'VANELR'):
 				vanelr = msgDataList[3]
-				Domoticz.Status("Vane Left/Right: " + vanelr)
+				if (vanelr == "AUTO"):
+					Domoticz.Status("Vane Left/Right to: " + vanelr)
+					Devices[9].Update(nValue=1, sValue="10") # Fan Auto
+				elif (vanelr == "SWING"):
+					Domoticz.Status("Vane Left/Right to: " + vanelr)
+					Devices[9].Update(nValue=1, sValue="20") # Fan Level 1
+				else:
+					Domoticz.Status("ERROR Vane Left/Right: " + vanelr)
+				Devices[9].Refresh()
 			elif (msgDataList[2] == 'ERRSTATUS'):
 				errorstatus = msgDataList[3]
 				if (errorstatus != "OK"):
@@ -303,6 +335,27 @@ class BasePlugin:
 			if (Command == "Off"):
 					Domoticz.Log("User cleared the ERROR Status LED")
 					Devices[6].Update(nValue=0, sValue="0")  # Set the Error LED switch to Off
+		elif (Unit == 8):
+			if (Command == "Set Level"):
+				Domoticz.Debug("Sending VaneUD")
+				if (str(Level) == '10'):
+					Domoticz.Status("Sending Vane Up/Down Auto")
+					self.WMPConn.Send('SET,1:VANEUD,AUTO\n')
+				elif (str(Level) == '20'):
+					Domoticz.Status("Sending Vane Up/Down Swing")
+					self.WMPConn.Send('SET,1:VANEUD,SWING\n')
+				elif (str(Level) == '30'):
+					Domoticz.Status("Sending Vane Up/Down Pulse")
+					self.WMPConn.Send('SET,1:VANEUD,PULSE\n')
+		elif (Unit == 9):
+			if (Command == "Set Level"):
+				Domoticz.Debug("Sending VaneLR")
+				if (str(Level) == '10'):
+					Domoticz.Status("Sending Vane Left/Right Auto")
+					self.WMPConn.Send('SET,1:VANELR,AUTO\n')
+				elif (str(Level) == '20'):
+					Domoticz.Status("Sending Vane Left/Right Swing")
+					self.WMPConn.Send('SET,1:VANELR,SWING\n')
 		else:
 			Domoticz.Error("No command available to send")
 
